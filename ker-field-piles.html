@@ -1,0 +1,876 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>KER Field Daily Pile Counter</title>
+  <style>
+    :root {
+      --navy: #153f67;
+      --blue: #2f7ca7;
+      --page: #e8f1f7;
+      --line: #bdd0df;
+      --ink: #142335;
+      --muted: #627484;
+      --red: #e33b3b;
+      --yellow: #ffd44d;
+      --green: #19a85b;
+      --white: #fff;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--page);
+      color: var(--ink);
+      font-family: "Trebuchet MS", Arial, sans-serif;
+      font-size: 16px;
+    }
+
+    button, input {
+      font: inherit;
+    }
+
+    .app {
+      width: min(620px, 100%);
+      margin: 0 auto;
+      padding: 12px;
+    }
+
+    .header {
+      background: var(--navy);
+      color: white;
+      padding: 14px;
+      border-radius: 8px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .header {
+      position: relative;
+    }
+
+    .help-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      border: 1px solid #d8e6f0;
+      background: white;
+      color: var(--navy);
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-size: 13px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .mark {
+      width: 44px;
+      height: 44px;
+      border-radius: 6px;
+      background: white;
+      color: var(--navy);
+      display: grid;
+      place-items: center;
+      font-size: 22px;
+      font-weight: 900;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 23px;
+      line-height: 1.05;
+      letter-spacing: 0;
+    }
+
+    h1 span {
+      display: block;
+    }
+
+    .subtitle {
+      margin: 0;
+      color: #c8d9e6;
+      font-weight: 800;
+      font-size: 13px;
+    }
+
+    .setup {
+      margin: 12px 0;
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .setup-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    .setup-grid .wide-field {
+      grid-column: 1 / -1;
+    }
+
+    .pile-set-row {
+      display: grid;
+      grid-template-columns: 1fr 96px;
+      gap: 8px;
+      align-items: end;
+    }
+
+    label {
+      display: grid;
+      gap: 5px;
+      color: var(--muted);
+      font-weight: 900;
+      text-transform: uppercase;
+      font-size: 12px;
+      letter-spacing: .04em;
+    }
+
+    input {
+      width: 100%;
+      border: 2px solid var(--line);
+      border-radius: 7px;
+      padding: 12px;
+      color: var(--ink);
+      font-size: 18px;
+      font-weight: 800;
+      background: white;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+
+    .top-action {
+      margin-bottom: 2px;
+    }
+
+    .btn {
+      min-height: 48px;
+      border: 0;
+      border-radius: 7px;
+      color: white;
+      background: var(--blue);
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .btn.secondary {
+      background: #edf4f9;
+      color: var(--navy);
+      border: 1px solid var(--line);
+    }
+
+    .btn.send {
+      grid-column: 1 / -1;
+      background: var(--navy);
+      min-height: 56px;
+      font-size: 18px;
+    }
+
+    .btn.report-send {
+      width: 100%;
+      margin-top: 8px;
+      background: var(--green);
+      min-height: 54px;
+      font-size: 18px;
+    }
+
+    .screen {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .screen-top {
+      background: white;
+      padding: 13px;
+      border-bottom: 5px solid var(--navy);
+      display: grid;
+      gap: 4px;
+    }
+
+    .job-name {
+      font-size: 24px;
+      font-weight: 900;
+      color: var(--navy);
+      line-height: 1.05;
+    }
+
+    .job-name.empty-job {
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    .today {
+      color: var(--muted);
+      font-weight: 800;
+      font-size: 14px;
+    }
+
+    .pile-grid {
+      padding: 8px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+
+    .pile {
+      border: 2px solid var(--line);
+      border-radius: 9px;
+      overflow: hidden;
+      background: #f9fcfe;
+    }
+
+    .pile-head {
+      color: white;
+      padding: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      font-weight: 900;
+    }
+
+    .pile.red .pile-head { background: var(--red); }
+    .pile.yellow .pile-head { background: var(--yellow); color: #171717; }
+    .pile.green .pile-head { background: var(--green); }
+
+    .pile-title {
+      font-size: 22px;
+      line-height: 1;
+    }
+
+    .pile-status {
+      font-size: 14px;
+      text-align: right;
+    }
+
+    .pile-body {
+      padding: 8px;
+      display: grid;
+      gap: 7px;
+    }
+
+    .numbers {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+
+    .status-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+
+    .status-buttons button {
+      min-height: 44px;
+      border: 0;
+      border-radius: 7px;
+      font-weight: 900;
+      cursor: pointer;
+      color: white;
+    }
+
+    .status-buttons .yellow { background: var(--yellow); color: #171717; }
+    .status-buttons .green { background: var(--green); }
+
+    input:disabled {
+      background: #eef4f8;
+      color: #8a98a5;
+      cursor: not-allowed;
+    }
+
+    .hint {
+      margin: 12px 0 0;
+      color: var(--muted);
+      text-align: center;
+      font-weight: 800;
+      font-size: 14px;
+    }
+
+    .report {
+      margin-top: 12px;
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      min-height: calc(100vh - 16px);
+      display: grid;
+      grid-template-rows: auto 1fr;
+    }
+
+    .report-head {
+      background: var(--navy);
+      color: white;
+      padding: 10px;
+      display: grid;
+      gap: 2px;
+    }
+
+    .report-head h2 {
+      margin: 0;
+      font-size: 22px;
+      letter-spacing: 0;
+    }
+
+    .report-head div {
+      color: #d8e6f0;
+      font-weight: 800;
+    }
+
+    .report-body {
+      padding: 8px;
+      display: grid;
+      gap: 8px;
+      align-content: start;
+    }
+
+    .report-meta {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .report-box {
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      overflow: hidden;
+    }
+
+    .report-box-title {
+      background: #f2f7fb;
+      color: var(--navy);
+      padding: 7px 8px;
+      font-weight: 900;
+      text-transform: uppercase;
+      font-size: 13px;
+      letter-spacing: .04em;
+    }
+
+    .report-line {
+      display: grid;
+      grid-template-columns: 96px 1fr;
+      border-top: 1px solid var(--line);
+      min-height: 42px;
+      align-items: center;
+    }
+
+    .report-label {
+      height: 100%;
+      padding: 9px;
+      font-weight: 900;
+      color: var(--muted);
+      background: #fafcff;
+      display: flex;
+      align-items: center;
+    }
+
+    .report-value {
+      padding: 9px;
+      font-size: 18px;
+      font-weight: 900;
+    }
+
+    .production-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    .production-table th,
+    .production-table td {
+      border-top: 1px solid var(--line);
+      padding: 6px 5px;
+      text-align: center;
+      font-weight: 900;
+    }
+
+    .production-table th {
+      background: #fafcff;
+      color: var(--muted);
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: .04em;
+    }
+
+    .production-table td {
+      font-size: 17px;
+      background: white;
+    }
+
+    .production-table .pile-cell { width: 20%; color: var(--navy); }
+    .production-table .status-cell { width: 30%; color: white; font-size: 14px; }
+    .production-table .status-cell.red { background: var(--red); }
+    .production-table .status-cell.yellow { background: var(--yellow); color: #171717; }
+    .production-table .status-cell.green { background: var(--green); }
+
+    .empty-report {
+      padding: 16px;
+      text-align: center;
+      color: var(--muted);
+      font-weight: 900;
+    }
+
+    .footer-space {
+      height: 24px;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 24, 38, .5);
+      z-index: 20;
+      display: none;
+      padding: 16px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .help-modal {
+      width: min(420px, 100%);
+      background: white;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      overflow: hidden;
+      box-shadow: 0 20px 40px rgba(10, 24, 38, .25);
+    }
+
+    .help-modal-head {
+      background: var(--navy);
+      color: white;
+      padding: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .help-modal-head h2 {
+      margin: 0;
+      font-size: 20px;
+    }
+
+    .close-help {
+      border: 0;
+      background: white;
+      color: var(--navy);
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .help-modal-body {
+      padding: 14px 18px 16px;
+      font-size: 17px;
+      font-weight: 800;
+    }
+
+    .help-modal-body ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    .help-modal-body li {
+      margin: 9px 0;
+    }
+
+    @media (min-width: 680px) {
+      .pile-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 430px) {
+      .app { padding: 8px; }
+      .help-btn { top: 8px; right: 8px; padding: 7px 9px; font-size: 12px; }
+      .setup-grid { grid-template-columns: 1fr; }
+      .pile-set-row { grid-template-columns: 1fr 82px; }
+      .report { min-height: calc(100vh - 12px); }
+      .report-meta { grid-template-columns: 1fr; gap: 6px; }
+      h1 { font-size: 20px; }
+      .pile-title { font-size: 20px; }
+      input { font-size: 16px; padding: 10px 8px; }
+      .status-buttons button { font-size: 13px; min-height: 42px; }
+      .report-line { grid-template-columns: 82px 1fr; }
+      .report-value { font-size: 16px; }
+      .report-head { padding: 9px; }
+      .report-head h2 { font-size: 20px; }
+      .production-table th { font-size: 10px; }
+      .production-table td { font-size: 15px; padding: 5px 3px; }
+      .production-table .status-cell { font-size: 11px; }
+    }
+
+    @media print {
+      body { background: white; }
+      .setup, .hint, .footer-space, .screen { display: none; }
+      .app { width: 100%; padding: 0; }
+      .report { border: 0; border-radius: 0; margin: 0; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="header">
+      <button class="help-btn" id="helpBtn" type="button">Help / Ayuda</button>
+      <div class="brand">
+        <div class="mark">KG</div>
+        <div>
+          <h1><span>KER-GEOTECH</span><span>Field Tracker</span></h1>
+        </div>
+      </div>
+    </header>
+
+    <section class="setup" id="setup">
+      <button class="btn secondary top-action" id="clearBtn" type="button">Start New Day</button>
+      <div class="setup-grid">
+        <label class="wide-field">Name / Nombre
+          <input id="nameInput" placeholder="Escribe tu nombre">
+        </label>
+        <label class="wide-field">Job site / Trabajo
+          <input id="jobInput" placeholder="Escribe la direccion aqui">
+        </label>
+        <div class="pile-set-row">
+          <label>Piles
+            <input id="pileCountInput" type="number" min="0" max="80" value="0">
+          </label>
+          <button class="btn" id="buildBtn" type="button">Set Piles</button>
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn send" id="reportBtn" type="button">Show Report / Ver reporte</button>
+      </div>
+    </section>
+
+    <section class="screen" id="shotArea">
+      <div class="screen-top">
+        <div class="job-name" id="jobName"></div>
+        <div class="today" id="todayLine"></div>
+      </div>
+      <div class="pile-grid" id="pileGrid"></div>
+    </section>
+
+    <section class="report" id="reportArea">
+      <div class="report-head">
+        <h2>Daily Pile Report</h2>
+        <div id="reportJob">Escribe la direccion aqui</div>
+        <div id="reportDate"></div>
+      </div>
+      <div class="report-body">
+        <div class="report-meta">
+          <div class="report-box">
+            <div class="report-box-title">Name / Nombre</div>
+            <div class="report-value" id="reportName">Nombre no escrito</div>
+          </div>
+          <div class="report-box">
+            <div class="report-box-title">Job site / Trabajo</div>
+            <div class="report-value" id="reportJobBox">Direccion no escrita</div>
+          </div>
+        </div>
+        <div class="report-box">
+          <div class="report-box-title">Production / Produccion</div>
+          <div class="report-piles" id="reportPiles"></div>
+        </div>
+        <button class="btn report-send" id="sendReportBtn" type="button">Send Report / Mandar reporte</button>
+      </div>
+    </section>
+
+    <p class="hint">Tap Show Report, screenshot the report, and text it to Silvia.</p>
+    <div class="footer-space"></div>
+  </main>
+
+  <div class="modal-backdrop" id="helpModal" aria-hidden="true">
+    <div class="help-modal" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
+      <div class="help-modal-head">
+        <h2 id="helpTitle">Help / Ayuda</h2>
+        <button class="close-help" id="closeHelpBtn" type="button">Close</button>
+      </div>
+      <div class="help-modal-body">
+        <ul>
+          <li>Write your name. / Escribe tu nombre.</li>
+          <li>Write the job address. / Escribe la direccion del trabajo.</li>
+          <li>Set total piles. / Pon el total de pilas.</li>
+          <li>Tap In progress or Done. / Toca In progress o Done.</li>
+          <li>Enter feet only if needed. / Escribe los pies solo si hace falta.</li>
+          <li>Tap Show Report and send screenshot to Silvia. / Toca Show Report y manda screenshot a Silvia.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const storageKey = "ker-field-pile-screenshot-v1";
+    const todayKey = localDateKey();
+    const labels = {
+      red: "Not done",
+      yellow: "In progress",
+      green: "Done"
+    };
+
+    const state = loadState();
+    const nameInput = document.querySelector("#nameInput");
+    const jobInput = document.querySelector("#jobInput");
+    const pileCountInput = document.querySelector("#pileCountInput");
+    const jobName = document.querySelector("#jobName");
+    const todayLine = document.querySelector("#todayLine");
+    const pileGrid = document.querySelector("#pileGrid");
+
+    document.querySelector("#buildBtn").addEventListener("click", buildFromInputs);
+    document.querySelector("#clearBtn").addEventListener("click", clearAll);
+    document.querySelector("#reportBtn").addEventListener("click", showReport);
+    document.querySelector("#sendReportBtn").addEventListener("click", sendReport);
+    document.querySelector("#helpBtn").addEventListener("click", showHelp);
+    document.querySelector("#closeHelpBtn").addEventListener("click", hideHelp);
+    document.querySelector("#helpModal").addEventListener("click", event => {
+      if (event.target.id === "helpModal") hideHelp();
+    });
+
+    render();
+
+    function loadState() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(storageKey));
+        if (saved && Array.isArray(saved.piles)) {
+          saved.count = Number(saved.count) || saved.piles.length || 0;
+          saved.name = saved.name || "";
+          saved.job = saved.job || "";
+          if (saved.workDate !== todayKey) {
+            saved.workDate = todayKey;
+            saved.piles = Array.from({ length: saved.count }, (_, index) => newPile(index + 1));
+            localStorage.setItem(storageKey, JSON.stringify(saved));
+          }
+          return saved;
+        }
+      } catch (error) {}
+      return {
+        name: "",
+        job: "",
+        count: 0,
+        workDate: todayKey,
+        piles: []
+      };
+    }
+
+    function newPile(number) {
+      return { number, drilled: "", socket: "", status: "red" };
+    }
+
+    function save() {
+      localStorage.setItem(storageKey, JSON.stringify(state));
+    }
+
+    function buildFromInputs() {
+      const nextCount = Math.max(0, Math.min(80, Number(pileCountInput.value) || 0));
+      state.name = nameInput.value.trim();
+      state.job = jobInput.value.trim();
+      state.count = nextCount;
+      state.workDate = todayKey;
+      while (state.piles.length < nextCount) state.piles.push(newPile(state.piles.length + 1));
+      state.piles = state.piles.slice(0, nextCount);
+      state.piles.forEach((pile, index) => pile.number = index + 1);
+      save();
+      render();
+    }
+
+    function clearAll() {
+      if (!confirm("Start new day? This will clear name, address, piles, and report.")) return;
+      state.name = "";
+      state.job = "";
+      state.count = 0;
+      state.workDate = todayKey;
+      state.piles = Array.from({ length: state.count }, (_, index) => newPile(index + 1));
+      save();
+      render();
+    }
+
+    function render() {
+      nameInput.value = state.name || "";
+      jobInput.value = state.job;
+      pileCountInput.value = state.count;
+      jobName.textContent = state.job || "";
+      jobName.classList.remove("empty-job");
+      todayLine.textContent = new Date().toLocaleDateString(undefined, {
+        weekday: "short",
+        month: "short",
+        day: "numeric",
+        year: "numeric"
+      });
+
+      pileGrid.innerHTML = state.piles.map(pile => `
+        <article class="pile ${pile.status}">
+          <div class="pile-head">
+            <div class="pile-title">Pile ${pile.number}</div>
+            <div class="pile-status">${labels[pile.status]}</div>
+          </div>
+          <div class="pile-body">
+            <div class="numbers">
+              <label>Drilled ft
+                <input inputmode="decimal" data-field="drilled" data-n="${pile.number}" value="${escapeHtml(pile.drilled)}" placeholder="0" ${pile.status === "red" ? "disabled" : ""}>
+              </label>
+              <label>Socket ft
+                <input inputmode="decimal" data-field="socket" data-n="${pile.number}" value="${escapeHtml(pile.socket)}" placeholder="0" ${pile.status === "red" ? "disabled" : ""}>
+              </label>
+            </div>
+            <div class="status-buttons">
+              <button class="yellow" data-status="yellow" data-n="${pile.number}" type="button">In progress</button>
+              <button class="green" data-status="green" data-n="${pile.number}" type="button">Done</button>
+            </div>
+          </div>
+        </article>
+      `).join("");
+
+      document.querySelectorAll("[data-field]").forEach(input => {
+        input.addEventListener("input", event => {
+          const pile = findPile(event.target.dataset.n);
+          pile[event.target.dataset.field] = event.target.value;
+          save();
+          renderReport();
+        });
+      });
+
+      document.querySelectorAll("[data-status]").forEach(button => {
+        button.addEventListener("click", event => {
+          const pile = findPile(event.currentTarget.dataset.n);
+          pile.status = event.currentTarget.dataset.status;
+          save();
+          render();
+        });
+      });
+
+      renderReport();
+    }
+
+    function renderReport() {
+      const changed = state.piles.filter(pile => pile.status !== "red" || pile.drilled || pile.socket);
+      document.querySelector("#reportName").textContent = state.name || "Nombre no escrito";
+      document.querySelector("#reportJob").textContent = state.job || "Direccion no escrita";
+      document.querySelector("#reportJobBox").textContent = state.job || "Direccion no escrita";
+      document.querySelector("#reportDate").textContent = todayLine.textContent;
+      document.querySelector("#reportPiles").innerHTML = changed.length ? `
+        <table class="production-table">
+          <thead>
+            <tr>
+              <th>Pile</th>
+              <th>Drilled ft</th>
+              <th>Rock ft</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${changed.map(pile => `
+              <tr>
+                <td class="pile-cell">${pile.number}</td>
+                <td>${escapeHtml(pile.drilled || "-")}</td>
+                <td>${escapeHtml(pile.socket || "-")}</td>
+                <td class="status-cell ${pile.status}">${shortStatus(pile.status)}</td>
+              </tr>
+            `).join("")}
+          </tbody>
+        </table>
+      ` : `<div class="empty-report">No pile work entered yet.</div>`;
+    }
+
+    function shortStatus(status) {
+      if (status === "green") return "Done";
+      if (status === "yellow") return "In progress";
+      return "Not Done";
+    }
+
+    function showReport() {
+      buildFromInputs();
+      document.querySelector("#reportArea").scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    async function sendReport() {
+      buildFromInputs();
+      const text = buildReportText();
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: "KER-GEOTECH Field Report",
+            text
+          });
+          return;
+        } catch (error) {
+          if (error && error.name === "AbortError") return;
+        }
+      }
+      const smsLink = `sms:8622493692?&body=${encodeURIComponent(text)}`;
+      window.location.href = smsLink;
+    }
+
+    function buildReportText() {
+      const changed = state.piles.filter(pile => pile.status !== "red" || pile.drilled || pile.socket);
+      const lines = [
+        "KER-GEOTECH Field Tracker",
+        `Name: ${state.name || "Nombre no escrito"}`,
+        `Job Site: ${state.job || "Direccion no escrita"}`,
+        `Date: ${todayLine.textContent}`,
+        "",
+        "Production:"
+      ];
+      if (!changed.length) {
+        lines.push("No pile work entered yet.");
+      } else {
+        changed.forEach(pile => {
+          lines.push(`Pile ${pile.number} - ${shortStatus(pile.status)} - Drilled ${pile.drilled || "-"} ft - Rock ${pile.socket || "-"} ft`);
+        });
+      }
+      return lines.join("\n");
+    }
+
+    function showHelp() {
+      const modal = document.querySelector("#helpModal");
+      modal.classList.add("open");
+      modal.setAttribute("aria-hidden", "false");
+    }
+
+    function hideHelp() {
+      const modal = document.querySelector("#helpModal");
+      modal.classList.remove("open");
+      modal.setAttribute("aria-hidden", "true");
+    }
+
+    function findPile(number) {
+      return state.piles.find(pile => pile.number === Number(number));
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "").replace(/[&<>"']/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+      })[char]);
+    }
+
+    function localDateKey() {
+      const date = new Date();
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    }
+  </script>
+</body>
+</html>
