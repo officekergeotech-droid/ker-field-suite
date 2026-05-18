@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>KER Field Daily Pile Counter</title>
+  <title>KER Field Daily Pile Tracker</title>
   <style>
     :root {
       --navy: #153f67;
@@ -128,6 +128,83 @@
       align-items: end;
     }
 
+    .daily-entry-row {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+      align-items: end;
+    }
+
+    .daily-entry-row label {
+      color: var(--navy);
+      font-size: 14px;
+    }
+
+    .pile-input-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 7px;
+    }
+
+    .pile-input-grid input {
+      min-height: 54px;
+      padding: 8px 4px;
+      text-align: center;
+      font-size: 21px;
+      border-color: var(--blue);
+    }
+
+    .daily-entry-row .btn {
+      min-height: 54px;
+      font-size: 17px;
+      background: var(--navy);
+    }
+
+    .entry-example {
+      margin-top: -3px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .daily-count {
+      background: #f2f7fb;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      padding: 9px 10px;
+      color: var(--navy);
+      font-weight: 900;
+      text-align: center;
+    }
+
+    .option-toggle {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      padding: 10px;
+      color: var(--navy);
+      font-size: 14px;
+      font-weight: 900;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+
+    .option-toggle input {
+      width: 24px;
+      height: 24px;
+      padding: 0;
+      accent-color: var(--navy);
+    }
+
+    .small-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
     label {
       display: grid;
       gap: 5px;
@@ -239,7 +316,7 @@
 
     .pile-head {
       color: white;
-      padding: 8px;
+      padding: 7px 8px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -252,7 +329,7 @@
     .pile.green .pile-head { background: var(--green); }
 
     .pile-title {
-      font-size: 22px;
+      font-size: 20px;
       line-height: 1;
     }
 
@@ -262,9 +339,9 @@
     }
 
     .pile-body {
-      padding: 8px;
+      padding: 7px;
       display: grid;
-      gap: 7px;
+      gap: 6px;
     }
 
     .numbers {
@@ -273,14 +350,23 @@
       gap: 6px;
     }
 
+    .pile-body label {
+      font-size: 11px;
+    }
+
+    .pile-body input {
+      padding: 9px 8px;
+      font-size: 16px;
+    }
+
     .status-buttons {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr 1fr 46px;
       gap: 6px;
     }
 
     .status-buttons button {
-      min-height: 44px;
+      min-height: 40px;
       border: 0;
       border-radius: 7px;
       font-weight: 900;
@@ -290,6 +376,13 @@
 
     .status-buttons .yellow { background: var(--yellow); color: #171717; }
     .status-buttons .green { background: var(--green); }
+    .status-buttons .remove-pile {
+      background: #edf4f9;
+      color: var(--red);
+      border: 1px solid var(--line);
+      font-size: 20px;
+      line-height: 1;
+    }
 
     input:disabled {
       background: #eef4f8;
@@ -303,6 +396,16 @@
       text-align: center;
       font-weight: 800;
       font-size: 14px;
+    }
+
+    .empty-piles {
+      padding: 18px 12px;
+      color: var(--muted);
+      text-align: center;
+      font-weight: 900;
+      background: #f9fcfe;
+      border: 2px dashed var(--line);
+      border-radius: 8px;
     }
 
     .report {
@@ -505,6 +608,10 @@
       .help-btn { top: 8px; right: 8px; padding: 7px 9px; font-size: 12px; }
       .setup-grid { grid-template-columns: 1fr; }
       .pile-set-row { grid-template-columns: 1fr 82px; }
+      .daily-entry-row { grid-template-columns: 1fr; }
+      .pile-input-grid { grid-template-columns: repeat(5, 1fr); gap: 5px; }
+      .pile-input-grid input { min-height: 50px; font-size: 18px; }
+      .small-actions { grid-template-columns: 1fr; }
       .report { min-height: calc(100vh - 12px); }
       .report-meta { grid-template-columns: 1fr; gap: 6px; }
       h1 { font-size: 20px; }
@@ -550,10 +657,36 @@
           <input id="jobInput" placeholder="Escribe la direccion aqui">
         </label>
         <div class="pile-set-row">
-          <label>Piles
-            <input id="pileCountInput" type="number" min="0" max="80" value="0">
+          <label>Total project piles
+            <input id="pileCountInput" type="number" min="0" max="500" value="0">
           </label>
-          <button class="btn" id="buildBtn" type="button">Set Piles</button>
+          <button class="btn" id="buildBtn" type="button">Save</button>
+        </div>
+        <div class="daily-entry-row wide-field">
+          <label>Piles worked today</label>
+          <div class="pile-input-grid" id="workedPilesInputs">
+            <input class="worked-pile-input" inputmode="numeric" pattern="[0-9]*" aria-label="Pile 1">
+            <input class="worked-pile-input" inputmode="numeric" pattern="[0-9]*" aria-label="Pile 2">
+            <input class="worked-pile-input" inputmode="numeric" pattern="[0-9]*" aria-label="Pile 3">
+            <input class="worked-pile-input" inputmode="numeric" pattern="[0-9]*" aria-label="Pile 4">
+            <input class="worked-pile-input" inputmode="numeric" pattern="[0-9]*" aria-label="Pile 5">
+            <input class="worked-pile-input" inputmode="numeric" pattern="[0-9]*" aria-label="Pile 6">
+            <input class="worked-pile-input" inputmode="numeric" pattern="[0-9]*" aria-label="Pile 7">
+            <input class="worked-pile-input" inputmode="numeric" pattern="[0-9]*" aria-label="Pile 8">
+            <input class="worked-pile-input" inputmode="numeric" pattern="[0-9]*" aria-label="Pile 9">
+            <input class="worked-pile-input" inputmode="numeric" pattern="[0-9]*" aria-label="Pile 10">
+          </div>
+          <button class="btn" id="addWorkedBtn" type="button">Add Piles</button>
+        </div>
+        <div class="entry-example wide-field">One box per pile number. / Un cuadro por cada pila.</div>
+        <div class="daily-count wide-field" id="dailyCount">0 piles added today</div>
+        <label class="option-toggle wide-field">
+          <input id="showAllInput" type="checkbox">
+          Show all project piles / Ver todas las pilas
+        </label>
+        <div class="small-actions wide-field">
+          <button class="btn secondary" id="clearTodayBtn" type="button">Clear Today's Piles</button>
+          <button class="btn secondary" id="sortPilesBtn" type="button">Sort Piles</button>
         </div>
       </div>
       <div class="actions">
@@ -585,9 +718,17 @@
             <div class="report-box-title">Job site / Trabajo</div>
             <div class="report-value" id="reportJobBox">Direccion no escrita</div>
           </div>
+          <div class="report-box">
+            <div class="report-box-title">Total project piles</div>
+            <div class="report-value" id="reportTotalPiles">0</div>
+          </div>
+          <div class="report-box">
+            <div class="report-box-title">Worked today</div>
+            <div class="report-value" id="reportWorkedToday">0</div>
+          </div>
         </div>
         <div class="report-box">
-          <div class="report-box-title">Production / Produccion</div>
+          <div class="report-box-title">Daily piles worked / Pilas trabajadas hoy</div>
           <div class="report-piles" id="reportPiles"></div>
         </div>
         <button class="btn report-send" id="sendReportBtn" type="button">Send Report / Mandar reporte</button>
@@ -608,7 +749,8 @@
         <ul>
           <li>Write your name. / Escribe tu nombre.</li>
           <li>Write the job address. / Escribe la direccion del trabajo.</li>
-          <li>Set total piles. / Pon el total de pilas.</li>
+          <li>Set total project piles. / Pon el total de pilas del trabajo.</li>
+          <li>Enter one pile number per box. / Escribe una pila por cuadro.</li>
           <li>Tap In progress or Done. / Toca In progress o Done.</li>
           <li>Enter feet only if needed. / Escribe los pies solo si hace falta.</li>
           <li>Tap Show Report and send screenshot to Silvia. / Toca Show Report y manda screenshot a Silvia.</li>
@@ -618,7 +760,7 @@
   </div>
 
   <script>
-    const storageKey = "ker-field-pile-screenshot-v1";
+    const storageKey = "ker-field-pile-screenshot-daily-v1";
     const todayKey = localDateKey();
     const labels = {
       red: "Not done",
@@ -629,12 +771,19 @@
     const state = loadState();
     const nameInput = document.querySelector("#nameInput");
     const jobInput = document.querySelector("#jobInput");
-    const pileCountInput = document.querySelector("#pileCountInput");
-    const jobName = document.querySelector("#jobName");
+      const pileCountInput = document.querySelector("#pileCountInput");
+      const workedPilesInputs = Array.from(document.querySelectorAll(".worked-pile-input"));
+      const dailyCount = document.querySelector("#dailyCount");
+      const showAllInput = document.querySelector("#showAllInput");
+      const jobName = document.querySelector("#jobName");
     const todayLine = document.querySelector("#todayLine");
     const pileGrid = document.querySelector("#pileGrid");
 
     document.querySelector("#buildBtn").addEventListener("click", buildFromInputs);
+    document.querySelector("#addWorkedBtn").addEventListener("click", addWorkedPiles);
+    document.querySelector("#clearTodayBtn").addEventListener("click", clearTodayPiles);
+    document.querySelector("#sortPilesBtn").addEventListener("click", sortPiles);
+    showAllInput.addEventListener("change", toggleShowAll);
     document.querySelector("#clearBtn").addEventListener("click", clearAll);
     document.querySelector("#reportBtn").addEventListener("click", showReport);
     document.querySelector("#sendReportBtn").addEventListener("click", sendReport);
@@ -653,9 +802,11 @@
           saved.count = Number(saved.count) || saved.piles.length || 0;
           saved.name = saved.name || "";
           saved.job = saved.job || "";
+          saved.showAll = Boolean(saved.showAll);
           if (saved.workDate !== todayKey) {
             saved.workDate = todayKey;
-            saved.piles = Array.from({ length: saved.count }, (_, index) => newPile(index + 1));
+            saved.piles = [];
+            saved.showAll = false;
             localStorage.setItem(storageKey, JSON.stringify(saved));
           }
           return saved;
@@ -666,12 +817,13 @@
         job: "",
         count: 0,
         workDate: todayKey,
+        showAll: false,
         piles: []
       };
     }
 
-    function newPile(number) {
-      return { number, drilled: "", socket: "", status: "red" };
+    function newPile(number, status = "yellow") {
+      return { number, drilled: "", socket: "", status };
     }
 
     function save() {
@@ -679,14 +831,55 @@
     }
 
     function buildFromInputs() {
-      const nextCount = Math.max(0, Math.min(80, Number(pileCountInput.value) || 0));
+      const nextCount = Math.max(0, Math.min(500, Number(pileCountInput.value) || 0));
       state.name = nameInput.value.trim();
       state.job = jobInput.value.trim();
       state.count = nextCount;
       state.workDate = todayKey;
-      while (state.piles.length < nextCount) state.piles.push(newPile(state.piles.length + 1));
-      state.piles = state.piles.slice(0, nextCount);
-      state.piles.forEach((pile, index) => pile.number = index + 1);
+      state.showAll = showAllInput.checked;
+      state.piles = state.piles.filter(pile => !state.count || pile.number <= state.count);
+      save();
+      render();
+    }
+
+    function addWorkedPiles() {
+      buildFromInputs();
+      const numbers = readWorkedPileInputs();
+      if (!numbers.length) {
+        alert("Enter one pile number in each box.");
+        return;
+      }
+      const tooHigh = numbers.filter(number => state.count && number > state.count);
+      if (tooHigh.length) {
+        alert(`Pile ${tooHigh[0]} is higher than the total project piles.`);
+        return;
+      }
+      numbers.forEach(number => {
+        if (!findPile(number)) state.piles.push(newPile(number));
+      });
+      state.piles.sort((a, b) => a.number - b.number);
+      workedPilesInputs.forEach(input => input.value = "");
+      save();
+      render();
+    }
+
+    function clearTodayPiles() {
+      if (!confirm("Clear today's pile list? This keeps name, address, and total project piles.")) return;
+      buildFromInputs();
+      state.piles = [];
+      save();
+      render();
+    }
+
+    function sortPiles() {
+      buildFromInputs();
+      state.piles.sort((a, b) => a.number - b.number);
+      save();
+      render();
+    }
+
+    function toggleShowAll() {
+      state.showAll = showAllInput.checked;
       save();
       render();
     }
@@ -697,7 +890,8 @@
       state.job = "";
       state.count = 0;
       state.workDate = todayKey;
-      state.piles = Array.from({ length: state.count }, (_, index) => newPile(index + 1));
+      state.showAll = false;
+      state.piles = [];
       save();
       render();
     }
@@ -706,6 +900,7 @@
       nameInput.value = state.name || "";
       jobInput.value = state.job;
       pileCountInput.value = state.count;
+      showAllInput.checked = Boolean(state.showAll);
       jobName.textContent = state.job || "";
       jobName.classList.remove("empty-job");
       todayLine.textContent = new Date().toLocaleDateString(undefined, {
@@ -715,7 +910,10 @@
         year: "numeric"
       });
 
-      pileGrid.innerHTML = state.piles.map(pile => `
+      const visiblePiles = state.showAll ? allProjectPiles() : state.piles;
+      pileGrid.innerHTML = visiblePiles.length ? visiblePiles.map(pile => {
+        const isDailyPile = Boolean(findPile(pile.number));
+        return `
         <article class="pile ${pile.status}">
           <div class="pile-head">
             <div class="pile-title">Pile ${pile.number}</div>
@@ -733,14 +931,16 @@
             <div class="status-buttons">
               <button class="yellow" data-status="yellow" data-n="${pile.number}" type="button">In progress</button>
               <button class="green" data-status="green" data-n="${pile.number}" type="button">Done</button>
+              ${isDailyPile ? `<button class="remove-pile" data-remove="${pile.number}" type="button" title="Remove pile">x</button>` : `<button class="remove-pile" data-add="${pile.number}" type="button" title="Add pile">+</button>`}
             </div>
           </div>
         </article>
-      `).join("");
+      `;
+      }).join("") : `<div class="empty-piles">${state.showAll ? "Set total project piles to see all piles." : "Enter the pile numbers worked today."}</div>`;
 
       document.querySelectorAll("[data-field]").forEach(input => {
         input.addEventListener("input", event => {
-          const pile = findPile(event.target.dataset.n);
+          const pile = getOrCreatePile(event.target.dataset.n);
           pile[event.target.dataset.field] = event.target.value;
           save();
           renderReport();
@@ -749,8 +949,25 @@
 
       document.querySelectorAll("[data-status]").forEach(button => {
         button.addEventListener("click", event => {
-          const pile = findPile(event.currentTarget.dataset.n);
+          const pile = getOrCreatePile(event.currentTarget.dataset.n);
           pile.status = event.currentTarget.dataset.status;
+          save();
+          render();
+        });
+      });
+
+      document.querySelectorAll("[data-remove]").forEach(button => {
+        button.addEventListener("click", event => {
+          const number = Number(event.currentTarget.dataset.remove);
+          state.piles = state.piles.filter(pile => pile.number !== number);
+          save();
+          render();
+        });
+      });
+
+      document.querySelectorAll("[data-add]").forEach(button => {
+        button.addEventListener("click", event => {
+          getOrCreatePile(event.currentTarget.dataset.add);
           save();
           render();
         });
@@ -760,12 +977,15 @@
     }
 
     function renderReport() {
-      const changed = state.piles.filter(pile => pile.status !== "red" || pile.drilled || pile.socket);
+      const reportPiles = state.showAll ? allProjectPiles() : state.piles.filter(pile => pile.status !== "red" || pile.drilled || pile.socket);
+      dailyCount.textContent = `${state.piles.length} ${state.piles.length === 1 ? "pile" : "piles"} added today`;
       document.querySelector("#reportName").textContent = state.name || "Nombre no escrito";
       document.querySelector("#reportJob").textContent = state.job || "Direccion no escrita";
       document.querySelector("#reportJobBox").textContent = state.job || "Direccion no escrita";
+      document.querySelector("#reportTotalPiles").textContent = state.count || "0";
+      document.querySelector("#reportWorkedToday").textContent = String(state.piles.length);
       document.querySelector("#reportDate").textContent = todayLine.textContent;
-      document.querySelector("#reportPiles").innerHTML = changed.length ? `
+      document.querySelector("#reportPiles").innerHTML = reportPiles.length ? `
         <table class="production-table">
           <thead>
             <tr>
@@ -776,7 +996,7 @@
             </tr>
           </thead>
           <tbody>
-            ${changed.map(pile => `
+            ${reportPiles.map(pile => `
               <tr>
                 <td class="pile-cell">${pile.number}</td>
                 <td>${escapeHtml(pile.drilled || "-")}</td>
@@ -819,19 +1039,21 @@
     }
 
     function buildReportText() {
-      const changed = state.piles.filter(pile => pile.status !== "red" || pile.drilled || pile.socket);
+      const reportPiles = state.showAll ? allProjectPiles() : state.piles.filter(pile => pile.status !== "red" || pile.drilled || pile.socket);
       const lines = [
         "KER-GEOTECH Field Tracker",
         `Name: ${state.name || "Nombre no escrito"}`,
         `Job Site: ${state.job || "Direccion no escrita"}`,
         `Date: ${todayLine.textContent}`,
+        `Total Project Piles: ${state.count || 0}`,
+        `Worked Today: ${state.piles.length}`,
         "",
-        "Production:"
+        state.showAll ? "All Project Piles:" : "Daily Piles Worked:"
       ];
-      if (!changed.length) {
+      if (!reportPiles.length) {
         lines.push("No pile work entered yet.");
       } else {
-        changed.forEach(pile => {
+        reportPiles.forEach(pile => {
           lines.push(`Pile ${pile.number} - ${shortStatus(pile.status)} - Drilled ${pile.drilled || "-"} ft - Rock ${pile.socket || "-"} ft`);
         });
       }
@@ -852,6 +1074,52 @@
 
     function findPile(number) {
       return state.piles.find(pile => pile.number === Number(number));
+    }
+
+    function getOrCreatePile(number) {
+      const pileNumber = Number(number);
+      let pile = findPile(pileNumber);
+      if (!pile) {
+        pile = newPile(pileNumber);
+        state.piles.push(pile);
+        state.piles.sort((a, b) => a.number - b.number);
+      }
+      return pile;
+    }
+
+    function allProjectPiles() {
+      const total = Number(state.count) || 0;
+      return Array.from({ length: total }, (_, index) => {
+        const number = index + 1;
+        return findPile(number) || newPile(number, "red");
+      });
+    }
+
+    function readWorkedPileInputs() {
+      return parsePileNumbers(workedPilesInputs.map(input => input.value).join(" "));
+    }
+
+    function parsePileNumbers(value) {
+      const numbers = new Set();
+      const normalized = String(value || "")
+        .replace(/\s+to\s+/gi, "-")
+        .replace(/\s+a\s+/gi, "-");
+      normalized.match(/\d+\s*-\s*\d+|\d+/g)?.forEach(part => {
+        const clean = part.trim();
+        if (!clean) return;
+        const range = clean.match(/^(\d+)\s*-\s*(\d+)$/);
+        if (range) {
+          const start = Number(range[1]);
+          const end = Number(range[2]);
+          const low = Math.min(start, end);
+          const high = Math.max(start, end);
+          for (let number = low; number <= high; number += 1) numbers.add(number);
+          return;
+        }
+        const number = Number(clean);
+        if (Number.isInteger(number) && number > 0) numbers.add(number);
+      });
+      return Array.from(numbers).sort((a, b) => a - b);
     }
 
     function escapeHtml(value) {
